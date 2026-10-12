@@ -1,0 +1,51 @@
+﻿@using BusinessObject
+@using static ApiService
+@model List<RoomDTO>
+
+@{
+    var prices = ViewBag.Prices as List<RevenueByRoomDto>;
+}
+
+<h2>Rooms</h2>
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Message"]
+    </div>
+}
+<a href="/Admin/CreateRoom" class="btn btn-success mb-3">+ Add Room</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Room</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Image</th>
+            <th>Action</th>
+            <th>Doanh thu</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            var roomRevenue = prices?.FirstOrDefault(p => p.RoomId == r.Id)?.Revenue ?? 0M;
+
+            <tr>
+                <td>@r.RoomNumber</td>
+                <td>@r.Type</td>
+                <td>@r.Price.ToString("C")</td>
+                <td>@r.Status</td>
+                <td>
+                    <img src="@("https://localhost:7123" + (r.Images.FirstOrDefault() ?? "/images/no-image.png"))" width="80" />
+                </td>
+                <td>
+                    <a href="/Admin/UpdateRoom/@r.Id" class="btn btn-warning">Edit</a>
+                    <a href="/Admin/DeleteRoom/@r.Id" class="btn btn-danger">Delete</a>
+                </td>
+                <td>@roomRevenue</td>
+            </tr>
+        }
+    </tbody>
+</table>

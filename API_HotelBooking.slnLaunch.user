@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "API_HotelBooking\\API_HotelBooking.csproj",
+        "Action": "StartWithoutDebugging"
+      },
+      {
+        "Path": "MVC_HotelBooking\\MVC_HotelBooking.csproj",
+        "Action": "StartWithoutDebugging"
+      }
+    ]
+  }
+]

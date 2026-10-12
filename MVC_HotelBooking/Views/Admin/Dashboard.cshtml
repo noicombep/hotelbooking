@@ -1,0 +1,85 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2>Admin Dashboard</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h5>Total Rooms</h5>
+            <h2>@ViewBag.TotalRooms</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h5>Total Bookings</h5>
+            <h2>@ViewBag.TotalBookings</h2>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h5>Total Revenue</h5>
+            <h2>@ViewBag.TotalRevenue</h2>
+        </div>
+    </div>
+</div>
+
+<h4>Booking Status</h4>
+<ul>
+    <li>Pending: @ViewBag.PendingBookings</li>
+    <li>Approved: @ViewBag.ApprovedBookings</li>
+    <li>Canceled: @ViewBag.CanceledBookings</li>
+</ul>
+
+<hr />
+
+<h4>Revenue & Booking Count by Room Type</h4>
+<canvas id="revenueRoomTypeChart" height="100"></canvas>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('revenueRoomTypeChart').getContext('2d');
+
+        const revenueRoomTypeChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RoomTypeNames)),
+                datasets: [
+                    {
+                        label: 'Revenue',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RevenueByRoomType)),
+                        backgroundColor: '#0d6efd',
+                        yAxisID: 'yRevenue'
+                    },
+                    {
+                        label: 'Booking Count',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.BookingCountByType)),
+                        backgroundColor: '#198754',
+                        yAxisID: 'yBookingCount'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    yRevenue: {
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: true,
+                        title: { display: true, text: 'Revenue' }
+                    },
+                    yBookingCount: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Booking Count' }
+                    }
+                }
+            }
+        });
+    </script>
+}

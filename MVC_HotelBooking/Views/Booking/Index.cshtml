@@ -1,0 +1,80 @@
+﻿@using BusinessObject
+@model List<BookingDTO>
+
+@{
+    ViewData["Title"] = "Booking của tôi";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["Message"]
+    </div>
+}
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Phòng</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th>Giá</th>
+            <th>Trạng thái thanh toán</th>
+            <th>Trạng thái booking</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Count > 0)
+        {
+            int i = 1;
+            foreach (var booking in Model)
+            {
+                <tr>
+                    <td>@i</td>
+                    <td>@booking.RoomName</td>
+                    <td>@booking.CheckIn.ToString("dd/MM/yyyy")</td>
+                    <td>@booking.CheckOut.ToString("dd/MM/yyyy")</td>
+                    <td>@booking.TotalPrice.ToString("C")</td> <!-- hiển thị theo định dạng tiền tệ -->
+                    <td>
+                        @if (booking.PaymentStatus == "Paid")
+                        {
+                            <span class="badge bg-success">@booking.PaymentStatus</span>
+                        }
+                        else if (booking.PaymentStatus == "Pending")
+                        {
+                            <span class="badge bg-warning">@booking.PaymentStatus</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">@booking.PaymentStatus</span>
+                        }
+                    </td>
+                    <td>
+                        @if (booking.Status == "Confirmed")
+                        {
+                            <span class="badge bg-success">@booking.Status</span>
+                        }
+                        else if (booking.Status == "Pending")
+                        {
+                            <span class="badge bg-warning">@booking.Status</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">@booking.Status</span>
+                        }
+                    </td>
+                </tr>
+                i++;
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7" class="text-center">Bạn chưa có booking nào</td>
+            </tr>
+        }
+    </tbody>
+</table>

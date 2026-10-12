@@ -1,0 +1,133 @@
+﻿@using BusinessObject
+@model List<BookingDTO>
+
+<h2>Bookings</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-warning">@TempData["Message"]</div>
+}
+
+<!-- Filter Form -->
+<div class="mb-3 row g-2">
+    <div class="col-auto">
+        <input type="text" id="filterUser" class="form-control" placeholder="User Name" />
+    </div>
+    <div class="col-auto">
+        <input type="text" id="filterRoom" class="form-control" placeholder="Room Name" />
+    </div>
+    <div class="col-auto">
+        <select id="filterStatus" class="form-select">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Canceled">Canceled</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <select id="filterPayment" class="form-select">
+            <option value="">All Payment</option>
+            <option value="Paid">Paid</option>
+            <option value="Unpaid">Unpaid</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <input type="date" id="filterFrom" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <input type="date" id="filterTo" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <button type="button" class="btn btn-primary" onclick="applyFilter()">Filter</button>
+    </div>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Room</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Total Price</th>
+            <th>Payment Status</th>
+            <th>Action</th>
+            <th>Payment Action</th>
+        </tr>
+    </thead>
+    <tbody id="bookingBody">
+        @foreach (var b in Model)
+        {
+            <tr>
+                <td>@b.UserName</td>
+                <td>@b.RoomName</td>
+                <td>@b.CheckIn.ToString("dd/MM/yyyy") - @b.CheckOut.ToString("dd/MM/yyyy")</td>
+                <td id="status-@b.Id">@b.Status</td>
+                <td>@b.TotalPrice.ToString("C")</td>
+                <td id="payment-@b.Id">@b.PaymentStatus</td>
+                <td>
+                    @if (b.Status == "Pending")
+                    {
+                        <button onclick="updateStatus(@b.Id, 'Approved')" class="btn btn-success btn-sm">Approve</button>
+                        <button onclick="updateStatus(@b.Id, 'Canceled')" class="btn btn-danger btn-sm">Cancel</button>
+                    }
+                </td>
+                <td>
+                    @if (b.PaymentStatus != "Paid" && b.Status == "Approved")
+                    {
+                        <button onclick="updateStatus(@b.Id, 'Paid')" class="btn btn-primary btn-sm">Mark Paid</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    async function updateStatus(id, status) {
+        const response = await fetch(`/Admin/UpdateStatus?id=${id}&status=${status}`, {
+            method: "POST"
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message);
+            applyFilter(); // Reload table sau khi update
+        } else {
+            alert(result.message);
+        }
+    }
+
+    async function applyFilter() {
+        const user = document.getElementById('filterUser').value;
+        const room = document.getElementById('filterRoom').value;
+        const status = document.getElementById('filterStatus').value;
+        const payment = document.getElementById('filterPayment').value;
+        const from = document.getElementById('filterFrom').value;
+        const to = document.getElementById('filterTo').value;
+
+        const params = new URLSearchParams({ user, room, status, payment, from, to });
+        const response = await fetch(`/Admin/GetFilteredBookings?${params.toString()}`);
+        const bookings = await response.json();
+
+        const tbody = document.getElementById('bookingBody');
+        tbody.innerHTML = '';
+        bookings.forEach(b => {
+            tbody.innerHTML += `
+            <tr>
+                <td>${b.userName}</td>
+                <td>${b.roomName}</td>
+                <td>${new Date(b.checkIn).toLocaleDateString()} - ${new Date(b.checkOut).toLocaleDateString()}</td>
+                <td id="status-${b.id}">${b.status}</td>
+                <td>${b.totalPrice.toLocaleString('en-US', { style: 'currency', currency: 'VND' })}</td>
+                <td id="payment-${b.id}">${b.paymentStatus}</td>
+                <td>
+                    ${b.status === 'Pending' ? `<button onclick="updateStatus(${b.id}, 'Approved')" class="btn btn-success btn-sm">Approve</button>
+                    <button onclick="updateStatus(${b.id}, 'Canceled')" class="btn btn-danger btn-sm">Cancel</button>` : ''}
+                </td>
+                <td>
+                    ${(b.paymentStatus !== 'Paid' && b.status === 'Approved') ? `<button onclick="updateStatus(${b.id}, 'Paid')" class="btn btn-primary btn-sm">Mark Paid</button>` : ''}
+                </td>
+            </tr>`;
+        });
+    }
+</script>

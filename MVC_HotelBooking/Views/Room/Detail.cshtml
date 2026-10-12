@@ -1,0 +1,183 @@
+﻿@using BusinessObject
+@model RoomDTO
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container mt-4">
+
+    <!-- BACK -->
+    <a href="/" class="btn btn-outline-secondary mb-3">⬅ Quay lại</a>
+
+    <div class="row g-4">
+
+        <!-- IMAGE -->
+        <div class="col-md-6">
+
+            @if (Model.Images != null && Model.Images.Any())
+            {
+                <div id="roomCarousel" class="carousel slide shadow rounded overflow-hidden">
+
+                    <div class="carousel-inner">
+                        @for (int i = 0; i < Model.Images.Count; i++)
+                        {
+                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                <img src="@("https://localhost:7123" + (Model.Images[i] ?? "/images/no-image.png"))"
+                                     class="d-block w-100"
+                                     style="height:400px; object-fit:cover;" />
+                            </div>
+                        }
+                    </div>
+
+                    <button class="carousel-control-prev" type="button"
+                            data-bs-target="#roomCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+
+                    <button class="carousel-control-next" type="button"
+                            data-bs-target="#roomCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+
+                </div>
+            }
+            else
+            {
+                <img src="https://via.placeholder.com/600x400"
+                     class="img-fluid rounded shadow" />
+            }
+
+        </div>
+
+        <!-- INFO -->
+        <div class="col-md-6">
+
+            <h2 class="fw-bold">
+                🏨 Phòng @Model.RoomNumber
+            </h2>
+
+            <span class="badge bg-primary mb-2">
+                @Model.Type
+            </span>
+
+            <p class="mb-1">
+                👥 Sức chứa: <b>@Model.Capacity người</b>
+            </p>
+
+            <!-- STATUS -->
+            @* @if (Model.Status == "Availabel")
+            {
+                <span class="badge bg-success mb-3">Còn phòng</span>
+            }
+            else
+            {
+                <span class="badge bg-danger mb-3">Hết phòng</span>
+            } *@
+
+            <hr />
+
+            <h3 class="text-danger fw-bold">
+                💰 @Model.Price.ToString("N0") đ / đêm
+            </h3>
+
+            <p class="mt-3 text-muted">
+                @Model.Description
+            </p>
+            <h4 class="mt-3">
+                🧾 Tổng tiền:
+                <span id="totalPrice" class="text-success">0 đ</span>
+            </h4>
+            <!-- BOOKING -->
+            <div class="mt-4">
+
+                <input type="date" id="checkIn" name="CheckIn" class="form-control mb-2" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                <input type="date" id="checkOut" name="CheckOut" class="form-control mb-3" required />
+
+                <button onclick="bookRoom()" class="btn btn-success w-100 mb-2">
+                    🛒 Đặt phòng ngay
+                </button>
+
+                <button class="btn btn-outline-danger w-100">
+                    ❤️ Yêu thích
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+    const pricePerNight = @Model.Price;
+
+    const checkInInput = document.getElementById("checkIn");
+    const checkOutInput = document.getElementById("checkOut");
+    const totalEl = document.getElementById("totalPrice");
+        checkInInput.addEventListener("change", () => {
+        checkOutInput.min = checkInInput.value;
+    });
+    function calculateTotal() {
+        const checkIn = new Date(checkInInput.value);
+        const checkOut = new Date(checkOutInput.value);
+
+        if (!checkInInput.value || !checkOutInput.value) {
+            totalEl.innerText = "0 đ";
+            return;
+        }
+
+        const diffTime = checkOut - checkIn;
+        const days = diffTime / (1000 * 60 * 60 * 24);
+
+        if (days <= 0) {
+            totalEl.innerText = "Ngày không hợp lệ";
+            return;
+        }
+
+        const total = days * pricePerNight;
+
+        totalEl.innerText = total.toLocaleString('vi-VN') + " đ";
+    }
+
+    checkInInput.addEventListener("change", calculateTotal);
+    checkOutInput.addEventListener("change", calculateTotal);
+</script>
+<script>
+    async function bookRoom() {
+        const checkIn = document.getElementById("checkIn").value;
+        const checkOut = document.getElementById("checkOut").value;
+
+        if (!checkIn || !checkOut) {
+            alert("Vui lòng chọn ngày");
+            return;
+        }
+
+        const data = {
+            roomId: @Model.Id,
+            checkIn: checkIn,
+            checkOut: checkOut
+        };
+
+        try {
+            const res = await fetch("/Booking/Create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                alert(result.message || "Đặt phòng thất bại");
+                return;
+            }
+
+            alert(result.message);
+            window.location.href = "/";
+        } catch (err) {
+            alert(err);
+        }
+    }
+</script>

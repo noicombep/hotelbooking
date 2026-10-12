@@ -1,0 +1,104 @@
+﻿@model List<BusinessObject.User>
+
+<h2>Quản lý Users</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr data-user-id="@user.Id" data-user-name="@user.Name" data-user-role="@user.Role">
+                <td>@user.Id</td>
+                <td>@user.Email</td>
+                <td>@user.Name</td>
+                <td class="user-role">@user.Role</td>
+                <td>
+                    <button class="btn btn-sm btn-primary edit-role-btn" data-bs-toggle="modal" data-bs-target="#editRoleModal">
+                        Edit Role
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="editRoleModal" tabindex="-1" aria-labelledby="editRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editRoleForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRoleModalLabel">Edit User Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="modalUserId" />
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="modalUserRole" required>
+                            <option value="Customer">Customer</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div id="modalError" class="text-danger"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            var userId, row;
+
+            $('.edit-role-btn').click(function(){
+                row = $(this).closest('tr');
+                userId = row.data('user-id');
+                $('#modalUserId').val(userId);
+                $('#modalUserRole').val(row.data('user-role'));
+                $('#modalError').text('');
+                $('#editRoleModalLabel').text('Edit Role: ' + row.data('user-name'));
+            });
+
+            $('#editRoleForm').submit(function(e){
+                e.preventDefault();
+                var role = $('#modalUserRole').val();
+
+                $.ajax({
+                    url: '/Admin/EditUserRole/' + userId,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ Role: role }),
+                    success: function(res){
+                        // Cập nhật giao diện table
+                        row.find('.user-role').text(role);
+                        row.data('user-role', role);
+                        $('#editRoleModal').modal('hide');
+                    },
+                    error: function(xhr){
+                        $('#modalError').text(xhr.responseText || 'Đã xảy ra lỗi');
+                    }
+                });
+            });
+        });
+    </script>
+}

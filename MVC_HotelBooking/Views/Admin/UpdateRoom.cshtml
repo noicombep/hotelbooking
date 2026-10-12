@@ -1,0 +1,139 @@
+﻿@model BusinessObject.RoomCreateRequest
+@{
+    var types = ViewBag.RoomTypes as List<BusinessObject.RoomTypeDTO>;
+    var existingImages = ViewBag.ExistingImages as List<string>;
+    var roomId = ViewBag.RoomId;
+}
+
+<h2>Update Room</h2>
+
+<form asp-action="UpdateRoom" method="post" enctype="multipart/form-data" id="roomForm">
+    <input type="hidden" name="Id" value="@roomId" />
+
+    <!-- Room Number -->
+    <input name="RoomNumber" class="form-control mb-2" placeholder="Room Number" value="@Model.RoomNumber" />
+    <span id="errRoom" class="text-danger"></span>
+
+    <!-- Capacity -->
+    <input name="Capacity" type="number" class="form-control mb-2" placeholder="Capacity" value="@Model.Capacity" />
+    <span id="errCap" class="text-danger"></span>
+
+    <!-- Price -->
+    <input name="Price" type="number" class="form-control mb-2" placeholder="Price" value="@Model.Price" />
+    <span id="errPrice" class="text-danger"></span>
+
+    <!-- Status -->
+    <select name="Status" class="form-control mb-2">
+        @if (Model?.Status == "Available")
+        {
+            <option value="Available" selected="selected">Available</option>
+            <option value="Occupied">Occupied</option>
+        }
+        else
+        {
+            <option value="Available">Available</option>
+            <option value="Occupied" selected="selected">Occupied</option>
+        }
+    </select>
+
+    <!-- Description -->
+    <textarea name="Description" class="form-control mb-2">@Model.Description</textarea>
+
+    <!-- Room Type -->
+    <select name="RoomTypeId" class="form-control mb-2">
+        <option value="">-- Chọn loại phòng --</option>
+        @foreach (var t in types)
+        {
+            if (Model?.RoomTypeId == t.Id)
+            {
+                <option value="@t.Id" selected="selected">@t.Name</option>
+            }
+            else
+            {
+                <option value="@t.Id">@t.Name</option>
+            }
+        }
+    </select>
+    <span id="errType" class="text-danger"></span>
+
+    <!-- Images (cũ + mới) -->
+    <label>Images:</label>
+    <div id="allImages" class="d-flex gap-2 flex-wrap mb-2">
+        @if(existingImages != null)
+        {
+            foreach(var url in existingImages)
+            {
+                <div class="image-box" style="position:relative;">
+                    <img src="@("https://localhost:7123" + url)" width="100" height="100" />
+                    <button type="button" class="btn btn-sm btn-danger remove-img" style="position:absolute;top:0;right:0;">X</button>
+                    <input type="hidden" name="ExistingImages" value="@url" />
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Upload new images -->
+    <label>Upload New Images:</label>
+    <input type="file" id="images" name="Images" multiple class="form-control mb-2" />
+
+    <button type="submit" class="btn btn-primary mt-3">Update</button>
+</form>
+
+<script>
+    const allImagesDiv = document.getElementById("allImages");
+
+    // Xóa ảnh cũ
+    allImagesDiv.querySelectorAll(".remove-img").forEach(btn => {
+        btn.onclick = () => btn.parentElement.remove();
+    });
+
+    // Preview ảnh mới + thêm vào allImages
+    document.getElementById("images").addEventListener("change", function() {
+        for (let file of this.files) {
+            const div = document.createElement("div");
+            div.className = "image-box";
+            div.style.position = "relative";
+
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            img.width = 100;
+            img.height = 100;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "btn btn-sm btn-danger remove-img";
+            btn.style.position = "absolute";
+            btn.style.top = "0";
+            btn.style.right = "0";
+            btn.innerText = "X";
+
+            btn.onclick = () => div.remove();
+
+            div.appendChild(img);
+            div.appendChild(btn);
+
+            allImagesDiv.appendChild(div);
+        }
+    });
+
+    // ================= CLIENT-SIDE VALIDATION =================
+    document.getElementById("roomForm").addEventListener("submit", function(e){
+        let isValid = true;
+        document.getElementById("errRoom").innerText = "";
+        document.getElementById("errCap").innerText = "";
+        document.getElementById("errPrice").innerText = "";
+        document.getElementById("errType").innerText = "";
+
+        const roomNumber = this.RoomNumber.value.trim();
+        const capacity = parseInt(this.Capacity.value);
+        const price = parseFloat(this.Price.value);
+        const typeId = this.RoomTypeId.value;
+
+        if(!roomNumber){ document.getElementById("errRoom").innerText="Không được để trống"; isValid=false;}
+        if(!capacity || capacity<=0){ document.getElementById("errCap").innerText="Capacity phải > 0"; isValid=false;}
+        if(!price || price<=0){ document.getElementById("errPrice").innerText="Price phải > 0"; isValid=false;}
+        if(!typeId){ document.getElementById("errType").innerText="Phải chọn loại phòng"; isValid=false;}
+
+        if(!isValid) e.preventDefault();
+    });
+</script>

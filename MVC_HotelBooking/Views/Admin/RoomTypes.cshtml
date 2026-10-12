@@ -1,0 +1,34 @@
+﻿@using BusinessObject
+@model List<RoomType>
+
+<h2>Room Types</h2>
+
+<form method="post" asp-action="CreateRoomType">
+    <input name="Name" class="form-control mb-2" placeholder="Room Type Name" />
+    <button class="btn btn-primary mb-3">Add</button>
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Rooms</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var rt in Model)
+        {
+            <tr>
+                <td>@rt.Id</td>
+                <td>@rt.Name</td>
+                <td>@rt.Rooms.Count</td>
+                <td>
+                    <a href="/Admin/DeleteRoomType/@rt.Id" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

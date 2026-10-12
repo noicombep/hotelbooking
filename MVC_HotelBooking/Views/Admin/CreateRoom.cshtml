@@ -1,0 +1,119 @@
+﻿@using BusinessObject
+@{
+    var types = ViewBag.RoomTypes as List<RoomTypeDTO>;
+}
+
+<h2>Create Room</h2>
+
+<form id="roomForm" enctype="multipart/form-data">
+
+    <!-- Room Number -->
+    <input name="RoomNumber" class="form-control mb-2" placeholder="Room Number" />
+    <span id="errRoom" class="text-danger"></span>
+
+    <!-- Capacity -->
+    <input name="Capacity" type="number" class="form-control mb-2" placeholder="Capacity" />
+    <span id="errCap" class="text-danger"></span>
+
+    <!-- Price -->
+    <input name="Price" type="number" class="form-control mb-2" placeholder="Price" />
+    <span id="errPrice" class="text-danger"></span>
+
+    <!-- Status -->
+    <select name="Status" class="form-control mb-2">
+        <option value="Available">Available</option>
+        <option value="Occupied">Occupied</option>
+    </select>
+
+    <!-- Description -->
+    <textarea name="Description" class="form-control mb-2" placeholder="Description"></textarea>
+
+    <!-- Room Type -->
+    <select name="RoomTypeId" class="form-control mb-2">
+        <option value="">-- Chọn loại phòng --</option>
+        @foreach (var t in types)
+        {
+            <option value="@t.Id">@t.Name</option>
+        }
+    </select>
+    <span id="errType" class="text-danger"></span>
+
+    <!-- Images -->
+    <input type="file" id="images" name="Images" multiple class="form-control mb-2" />
+
+    <div id="preview" class="d-flex gap-2 flex-wrap"></div>
+
+    <button class="btn btn-primary mt-3">Create</button>
+</form>
+
+<script>
+    // ================= PREVIEW IMAGE =================
+    document.getElementById("images").addEventListener("change", function () {
+        const preview = document.getElementById("preview");
+        preview.innerHTML = "";
+
+        for (let file of this.files) {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            img.style.width = "100px";
+            img.style.height = "100px";
+            preview.appendChild(img);
+        }
+    });
+
+    // ================= SUBMIT =================
+    document.getElementById("roomForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        // clear lỗi
+        document.getElementById("errRoom").innerText = "";
+        document.getElementById("errCap").innerText = "";
+        document.getElementById("errPrice").innerText = "";
+        document.getElementById("errType").innerText = "";
+
+        const roomNumber = this.RoomNumber.value.trim();
+        const capacity = parseInt(this.Capacity.value);
+        const price = parseFloat(this.Price.value);
+        const typeId = this.RoomTypeId.value;
+
+        let isValid = true;
+
+        // validate
+        if (!roomNumber) {
+            document.getElementById("errRoom").innerText = "Không được để trống";
+            isValid = false;
+        }
+
+        if (!capacity || capacity <= 0) {
+            document.getElementById("errCap").innerText = "Capacity phải > 0";
+            isValid = false;
+        }
+
+        if (!price || price <= 0) {
+            document.getElementById("errPrice").innerText = "Price phải > 0";
+            isValid = false;
+        }
+
+        if (!typeId) {
+            document.getElementById("errType").innerText = "Phải chọn loại phòng";
+            isValid = false;
+        }
+
+        if (!isValid) return;
+
+        const formData = new FormData(this);
+
+        const res = await fetch("/Admin/CreateRoom", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await res.json();
+        alert(result.message);
+
+        // 🔥 FIX BUG
+        if (result.success) {
+            window.location.href = "/Admin/Rooms";
+        }
+    });
+</script>
